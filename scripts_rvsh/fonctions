@@ -1,0 +1,405 @@
+#!/bin/bash
+
+
+userfile=~/MyNetwork/Users
+userinfo=~/MyNetwork/UsersInfos
+machinelist=~/MyNetwork/hosts
+Connfile=~/MyNetwork/Conn
+
+
+usage(){
+
+	echo "Usages : rvsh -connect machine-name username"
+	echo "       : rvsh -admin"
+}
+
+
+user_exist(){
+
+	if [ $# -eq 1 ]
+	then
+		if [ -r $userfile ]
+		then
+			while read line
+			do
+				user=$(echo $line | cut -f1 -d' ')
+				if [ $user == $1  ]
+				then
+					return 1
+				fi	
+			done < $userfile
+			return 0
+		else
+			echo "La liste des utilisateurs n'est pas accessible"
+		fi
+	else
+			echo "Usage : user_exist username"
+	fi
+}
+
+machine_exist(){
+	
+	if [ $# -eq 1 ]
+	then
+		if [ -r $machinelist ]
+		then
+			while read line	
+			do
+				if [ $line == $1 ]
+				then
+					return 1
+				fi
+			done < $machinelist
+			return 0
+		else
+			echo "La liste des machines n'est pas accessible"
+		fi
+	else
+		echo "Usage : machine_exist machine-name"
+	fi
+}
+
+
+user_rights(){
+	
+	if [ $# -eq 2 ]
+	then
+		while read line
+		do
+			if [ "$line" == "$1" ]
+			then
+				return 1
+			fi
+		done < ~/MyNetwork/Reseau/$2/users
+		return 0
+	else
+		echo "Usage : user_rights username machine-name"
+	fi
+}
+
+
+user_password(){
+# # # # # #cryptage de mot de passe : comparer avec le cryptage du mot de passe
+	if [ $# -eq 2 ]
+	then
+		if [ -r $userfile ]
+		then
+			while read line
+			do
+				if [ $(echo $line | cut -f1 -d' ') == $1 ]
+				then
+					mdp=$(echo $line | cut -f2 -d' ')
+					if [ "$2" == "$mdp" ]
+					then
+						return 1
+					fi
+					return 0
+				fi
+			done < $userfile 
+		else
+			echo "La liste des utilisateurs n'est pas accessible"
+		fi
+	else echo " Usage : user_password username password"
+	fi
+}
+
+
+user_connected(){
+
+	if [ $# -eq 1 ]
+	then
+		user_connected_list=$(awk '{print $1}' $Connfile)
+		for uc_user in $user_connected_list
+		do
+			if [ $uc_user == $1 ]
+			then
+				return 1
+			fi
+		done
+		return 0
+	else
+		echo "Usage: user_connected username"
+	fi
+}
+
+
+editConn(){
+	
+	if [ $# -eq 3 ]
+	then
+		terminal="tty$(tty | awk -F/ '{print $4}')"
+		if [ "$3" == "add" ]
+		then	
+			jour=$(date | awk '{print $2}')
+			mois=$(date | awk '{print $3}')
+			annee=$(date | awk '{print $4}')
+			heure=$(date | awk '{print $5}')
+
+			case $mois in
+				janv.) mois="01";;
+				févr.) mois="02";;
+				mars) mois="03";;
+				avril) mois="04";;
+				mai) mois="05";;
+				juin) mois="06";;
+				juil.) mois="07";;
+				août) mois="08";;
+				sept.) mois="09";;
+				oct.) mois="10";;
+				nov.) mois="11";;
+				déc.) mois="12";;
+			esac
+
+			
+			echo "$1	$2  	$jour-$mois-$annee $heure $terminal" >> $Connfile
+			echo "		[  $1 connected to $2  ]"
+		else
+			if [ "$3" == "del" ]
+			then
+				while read line
+				do
+					if [ $(echo $line | awk '{print $1}') == $1 -a $(echo $line | awk '{print $2}') == $2 -a $(echo $line | awk '{print $5}') == $terminal ]
+					then
+						dat=$(echo $line | awk '{print $3}')
+						hour=$(echo $line | awk '{print $4}')
+						sed '/'$1'.*'$2'.*'$dat'.*'$hour'.*'$terminal'/d' $Connfile > ~/MyNetwork/file.temp
+						break
+					fi
+				done < $Connfile
+
+				mv ~/MyNetwork/file.temp $Connfile
+				echo "		[  $1 logout from host $2  ]"
+			
+			else
+				echo "third argument must be 'add' or 'del'"
+		
+			fi
+		fi
+
+	else
+		echo "Usage : editConn username machine-name (add | del)"
+	fi
+}
+
+
+prompt(){
+
+	if [ $# -eq 3 ]
+	then
+	#	echo "[ User Mode ]"
+		read -p "$1@$2> " $3
+	else
+		echo "Usage : prompt username machine-name saisie"
+	fi
+}
+
+
+who(){
+
+	if [ $# -eq 1 ]
+	then
+		echo
+		echo "Utilisateurs connectés sur cette machine: "
+		echo
+		awk -v var=$1 '$2==var {print}' $Connfile | awk '{print $1, $3, $4, $5}'
+		echo
+	else
+		echo "Usage : who machine-name"
+	fi
+}
+
+
+rusers(){
+
+	echo
+	echo "Utilisateurs présents sur le réseau: "
+	echo
+	awk '{print $1, $2, $3, $4, $5}' $Connfile
+	echo
+}
+
+
+rhost(){
+	
+	echo 
+	echo "Machines connectées au réseau :"
+	echo 
+	while read line
+	do
+		echo "$line"
+	done < $machinelist
+	echo
+}
+
+
+finger(){
+
+	if [ $# -eq 1 ]
+	then
+		tmp_file=~/MyNetwork/check.tmp
+		touch $tmp_file
+		echo
+		echo "Login	date_de_naissance	sexe		mail	 		telephone		companie"
+		who $1 | sed '/^$/d'| while read login autre
+		do
+			affichage=$(awk -v user=$login '$1==user {printf"%s	%s		%s	%s		%s		%s\n", $1, $2, $3, $4, $5, $6}' $userinfo)
+			
+			if [ $(awk -v ligne="$affichage" '$0==ligne {print}' $tmp_file | wc -w) -eq 0 ]
+			then
+				echo "$affichage" >> $tmp_file
+				echo "$affichage"
+			fi
+		done 
+		echo
+		rm $tmp_file
+	else
+		if [ $# -eq 2 ]
+		then
+			user_exist $2
+			if [ $? -eq 1 ]
+			then
+				login=$(awk -v login=$2 '$1==login {print $1}' $userinfo)
+				ddn=$(awk -v login=$2 '$1==login {print $2}' $userinfo)
+				sexe=$(awk -v login=$2 '$1==login {print $3}' $userinfo)
+				mail=$(awk -v login=$2 '$1==login {print $4}' $userinfo)
+				tel=$(awk -v login=$2 '$1==login {print $5}' $userinfo)
+				companie=$(awk -v login=$2 '$1==login {print $6}' $userinfo)
+			
+				echo
+				echo " login: $login"
+				echo " date de naiss.: $ddn"
+				echo " sexe: $sexe"
+				echo " e-mail: $mail"
+				echo " téléphone: $tel"
+				echo " companie: $companie"
+				echo
+			else
+				echo " l'utilisateur $2 n'existe pas"
+			fi
+		else
+			echo "Usage : finger machine-name [username]"
+		fi
+	fi
+}
+
+
+passwd(){
+
+	if [ $# -eq 1 ]
+	then
+		read -p "  mot de passe actuel: " mdpactuel
+		filemdp=$(awk -v val=$1 '$1==val {print $2}' $userfile)
+		if [ "$mdpactuel" == $filemdp ]
+		then
+			read -p "  nouveau mot de passe: " nouveaumdp
+			newline=$(awk -v usr=$1 '$1==usr {print}' $userfile | sed 's/'$filemdp'/'$nouveaumdp'/')
+			sed 's/.*'$1'.*'$filemdp'.*/'"$newline"'/' $userfile >> ~/MyNetwork/file.tmp
+			mv ~/MyNetwork/file.tmp $userfile
+		else
+			echo "mot de passe incorrect !"
+		fi
+	else
+		echo "Usage : passwd username"
+	fi
+}
+
+
+commandlist(){
+
+	echo
+	echo -e " ?        : liste des commandes disponibles\n \
+who      : utilisateurs connectés sur la machine\n \
+rusers   : utilisateurs connectés sur le réseau\n \
+rhost    : machines connectées au réseau\n \
+rconnect(soon): se connecter à une autre machine via celle-ci\n \
+su(soon) : changer d'utilisateur\n \
+passwd   : changer son mot de passe\n \
+finger	  : informations sur l'utilisateur\n \
+write(soon): envoyer un message à un utilisateur sur le réseau\n \
+rvecho   : afficher un message à l'écran\n \
+clear	  : effacer le contenu de l'écran\n \
+exit     : se déconnecter de cette machine\n" 
+}
+
+
+rvecho(){
+
+	echo_tmp_file=~/MyNetwork/Echo.tmp
+        echo $1 >> $echo_tmp_file
+        read chp1 chp2 < $echo_tmp_file
+        echo -e "\n $chp2\n"
+        rm $echo_tmp_file
+}
+
+
+write(){
+	
+	if [ $# -ge 4  ]
+	then
+		wuser=$(echo $3 | awk -F@ '{print $1}')
+		whost=$(echo $3 | awk -F@ '{print $2}')
+
+        	if [ $(echo $wuser | wc -w) -ne 0 -a $(echo $whost | wc -w) -ne 0 ]
+        	then
+                	user_exist $wuser
+                	if [ $? -eq 1 ]
+                	then
+                        	machine_exist $whost
+                        	if [ $? -eq 1 ]
+                        	then
+                                	user_connected $wuser
+                                	if [ $? -eq 1 ]
+                                	then
+                                        	wtty_list=$(awk -v wvuser=$wuser '$1==wvuser {print}' $Connfile | awk -v wvhost=$whost '$2==wvhost {print $5}')
+							
+						if [ $(echo $wtty_list | wc -w) -ne 0 ]
+                	                        then
+                        	                        for wtty in $wtty_list
+                                	                do
+                                        	                wnumtty=$(echo $wtty | cut -c4)
+
+                                                	        echo -e "\n" >> /dev/pts/$wnumtty
+                                                        	echo "  INCOMING MESSAGE">> /dev/pts/$wnumtty
+                                                        	echo "  Sender: $1@$2" >> /dev/pts/$wnumtty
+                                                        	echo -e "  Time:   $(date | sed 's/CET//')\n" >> /dev/pts/$wnumtty
+                                                        	echo "  CONTENU:" >> /dev/pts/$wnumtty
+                                                        	echo "  $4" >> /dev/pts/$wnumtty
+                                                        	echo >> /dev/pts/$wnumtty
+                                                	done
+                                        	else
+                                                	echo " $wuser n'est pas connecté sur l'hote $whost"
+                                        	fi
+                                	else
+                                        	echo " $wuser n'est pas connecté sur le réseau"
+                                	fi
+                        	else
+                                	echo " la machine $whost n'existe pas"
+                        	fi
+                	else
+                        	echo " l'utilisateur $wuser n'existe pas"
+                	fi
+        	else
+                	echo " Usage : write username@machine-name message"
+        	fi
+	else
+        	echo " Usage : write username@machine-name message"
+	fi
+
+}
+
+
+rconnect(){
+
+	if [ $# -eq 1 ]
+	then
+		machine_exist $1
+		if [ $? -eq 1 ]
+		then
+			echo "soon"			
+		fi
+		return 0	
+	else
+		echo "Usage : rconnect machine-name"
+	fi
+}
+
