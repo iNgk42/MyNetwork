@@ -314,10 +314,13 @@ rhost    : machines connectées au réseau\n \
 rconnect(soon): se connecter à une autre machine via celle-ci\n \
 su(soon) : changer d'utilisateur\n \
 passwd   : changer son mot de passe\n \
-finger	  : informations sur l'utilisateur\n \
-write(soon): envoyer un message à un utilisateur sur le réseau\n \
+finger   : informations sur l'utilisateur\n \
+write    : envoyer un message à un utilisateur sur le réseau\n \
+rvi      : créer/éditer un fichier\n \
+rls      : afficher la liste des fichiers\n \
+rrm      : supprimer un fichier\n \
 rvecho   : afficher un message à l'écran\n \
-clear	  : effacer le contenu de l'écran\n \
+clear    : effacer le contenu de l'écran\n \
 exit     : se déconnecter de cette machine\n" 
 }
 
@@ -385,6 +388,85 @@ write(){
         	echo " Usage : write username@machine-name message"
 	fi
 
+}
+
+
+rvi(){
+
+	# "rvi $arg") si arg vide USAGE sinon rvi a1 a2 a3
+	if [ $# -eq 3 ]
+	then
+		user_Directory=~/MyNetwork/Reseau/$1/$2
+		if [ -d $user_Directory ]
+		then
+			vi $user_Directory/$3
+		else
+			echo "Dossier utilisateur inacessible: $2" 
+		fi
+	else
+		echo "Usage : rvi machine-name username file_name"
+	fi
+}
+
+
+rls(){
+
+	# rls) rls
+	if [ $# -eq 2 ]
+	then
+		user_Directory=~/MyNetwork/Reseau/$1/$2
+		if [ -d $user_Directory ]
+		then
+			ls $user_Directory
+		else
+			echo "Dossier utilisateur inacessible: $2" 
+		fi
+	else
+		echo "Usage : rls machine-name username"
+	fi
+}
+
+
+rrm(){
+
+	# "rrm $arg") rrm a1 a2 a3
+	if [ $# -eq 3 ]
+	then
+		user_Directory=~/MyNetwork/Reseau/$1/$2
+		if [ -d $user_Directory ]
+		then
+			if [ -e $user_Directory/$3 ]
+			then
+				rm $user_Directory/$3
+			else
+				echo "le fichier $3 n'existe pas"
+			fi
+		else
+			echo "Dossier utilisateur inacessible: $2" 
+		fi
+	else
+		echo "Usage : rrm machine-name username file_to_delete"
+	fi
+}
+
+
+su(){
+
+	# Usage : su username puis mot de passe
+	# verifier les droits
+	# Lorsque tout bon, 
+	# editconn add
+	# tout ce que le user fait est à son compte
+	# repertoire de travail est celui du nouveau user pas de celui qui a tapé 
+	# exit -- retour au user d'avant
+	# editconn del
+	# sécurité: chaque user doit bien garder ses identifiants
+
+	# fichier de précedence pour gerer les su (fichier temporaire)
+	# num_ligne user_sué
+	# num_ligne doit tjr contenir le nombre du dernier nom du fichier (permet la suppresion et le retour en arrière)
+	# utiliser le set pour changer le username pour celui sué
+	echo "soon"
 }
 
 

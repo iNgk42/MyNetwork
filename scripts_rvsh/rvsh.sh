@@ -78,6 +78,9 @@ then
 								   				   who) who $2;;
 												rusers) rusers;;
 												finger) finger $2 ;;
+											    "rvi $arg") rvi $2 $3 $arg;;
+												   rls) rls $2 $3;;
+											    "rrm $arg") rrm $2 $3 $arg;;
 			   								 "finger $arg") finger $2 $arg;;
 												passwd) passwd $3;;
 												 clear) clear;;	
