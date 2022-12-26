@@ -99,7 +99,8 @@ user_password(){
 		else
 			echo "La liste des utilisateurs n'est pas accessible"
 		fi
-	else echo " Usage : user_password username password"
+	else 
+		echo " Usage : user_password username password"
 	fi
 }
 
@@ -458,7 +459,7 @@ su(){
 	# editconn add
 	# tout ce que le user fait est à son compte
 	# repertoire de travail est celui du nouveau user pas de celui qui a tapé 
-	# exit -- retour au user d'avant
+	# exit -- retour au user d'avant (if else pour gerer les fichiers tempsu et temprconnect)
 	# editconn del
 	# sécurité: chaque user doit bien garder ses identifiants
 
@@ -466,12 +467,40 @@ su(){
 	# num_ligne user_sué
 	# num_ligne doit tjr contenir le nombre du dernier nom du fichier (permet la suppresion et le retour en arrière)
 	# utiliser le set pour changer le username pour celui sué
-	echo "soon"
+	if [ $# -eq 2 ]
+	then
+		user_exist $1
+		if [ $? -eq 1 ]
+		then
+			user_rights $1 $2
+			if [ $? -eq 1 ]
+			then
+				read -p "Password for $1: " su_Password
+				user_password $1 $su_Password
+				if [ $? -eq 1 ]
+				then
+					#sutempfile=~/MyNetwork/sufile.temp_$2
+					editConn $1 $2 add
+					return 1
+				else
+					echo "Mot de passe incorrect"
+					return 0
+				fi
+			else
+				echo "Connexion impossible: permission denied"
+			fi
+		else
+			echo "L'utilisateur $1 n'exite pas"
+		fi
+	else
+		echo "Usage : su username machine"
+	fi
 }
 
 
 rconnect(){
 
+	#
 	if [ $# -eq 1 ]
 	then
 		machine_exist $1

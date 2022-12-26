@@ -84,9 +84,43 @@ then
 			   								 "finger $arg") finger $2 $arg;;
 												passwd) passwd $3;;
 												 clear) clear;;	
-												  exit)
-													saisie="EXITexitSORTIEsortieENDendFINfin"
-													editConn $3 $2 del;;
+											     "su $arg") su $arg $2 
+													if [ $? -eq 1 ]
+													then
+														Csutempfile=~/MyNetwork/sufile.temp_$2
+														echo "$3" >> $Csutempfile
+														set '-connect' $2 $arg
+													fi
+													;;
+
+												  exit) Msutempfile=~/MyNetwork/sufile.temp_$2
+													Mrcotempfile=~/MyNetwork/rcofile.temp_$3
+
+													if [ -r $Msutempfile ]
+													then
+															previous_user=$(tail -1 $Msutempfile)
+															head -n -1 $Msutempfile >> ~/MyNetwork/eexiit.tmp
+															cat ~/MyNetwork/eexiit.tmp > $Msutempfile
+															rm ~/MyNetwork/eexiit.tmp
+
+															editConn $3 $2 del
+															set '-connect' $2 $previous_user
+
+															if [ $(wc -w $Msutempfile) -eq 0 ]
+															then
+																rm $Msutempfile
+															fi
+
+													else
+														if [ -r $Mrcotempfile ]
+														then
+															echo "parcours+set+delete+editconn_del"
+														else
+															saisie="EXITexitSORTIEsortieENDendFINfin"
+															editConn $3 $2 del
+														fi
+													fi;;
+
 												     *)
 													echo -e "\n $comm : Unknown command or bad arguments"
 													echo -e " type '?' to see available commands\n";;
