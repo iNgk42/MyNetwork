@@ -89,7 +89,7 @@ then
 													then
 														Csutempfile=~/MyNetwork/sufile.temp_$2
 														echo "$3" >> $Csutempfile
-														set '-connect' $2 $arg
+														set 'connect' $2 $arg
 													fi
 													;;
 
@@ -104,9 +104,9 @@ then
 															rm ~/MyNetwork/eexiit.tmp
 
 															editConn $3 $2 del
-															set '-connect' $2 $previous_user
+															set "connect" $2 $previous_user
 
-															if [ $(wc -w $Msutempfile) -eq 0 ]
+															if [ $(wc -w < $Msutempfile) -eq 0 ]
 															then
 																rm $Msutempfile
 															fi

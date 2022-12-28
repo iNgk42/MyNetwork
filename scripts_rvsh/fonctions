@@ -313,7 +313,7 @@ who      : utilisateurs connectés sur la machine\n \
 rusers   : utilisateurs connectés sur le réseau\n \
 rhost    : machines connectées au réseau\n \
 rconnect(soon): se connecter à une autre machine via celle-ci\n \
-su(soon) : changer d'utilisateur\n \
+su       : changer d'utilisateur\n \
 passwd   : changer son mot de passe\n \
 finger   : informations sur l'utilisateur\n \
 write    : envoyer un message à un utilisateur sur le réseau\n \
@@ -394,7 +394,6 @@ write(){
 
 rvi(){
 
-	# "rvi $arg") si arg vide USAGE sinon rvi a1 a2 a3
 	if [ $# -eq 3 ]
 	then
 		user_Directory=~/MyNetwork/Reseau/$1/$2
@@ -412,7 +411,6 @@ rvi(){
 
 rls(){
 
-	# rls) rls
 	if [ $# -eq 2 ]
 	then
 		user_Directory=~/MyNetwork/Reseau/$1/$2
