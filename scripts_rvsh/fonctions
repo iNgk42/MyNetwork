@@ -80,6 +80,7 @@ user_rights(){
 
 user_password(){
 # # # # # #cryptage de mot de passe : comparer avec le cryptage du mot de passe
+# on conserve les mots de passe chiffrés
 	if [ $# -eq 2 ]
 	then
 		if [ -r $userfile ]
@@ -89,7 +90,7 @@ user_password(){
 				if [ $(echo $line | cut -f1 -d' ') == $1 ]
 				then
 					mdp=$(echo $line | cut -f2 -d' ')
-					if [ "$2" == "$mdp" ]
+					if [ $(echo "$2" | base64 | sha256sum | awk '{print $1}') == "$mdp" ]
 					then
 						return 1
 					fi
@@ -290,10 +291,11 @@ passwd(){
 	then
 		read -p "  mot de passe actuel: " mdpactuel
 		filemdp=$(awk -v val=$1 '$1==val {print $2}' $userfile)
-		if [ "$mdpactuel" == $filemdp ]
+		if [ $(echo "$mdpactuel" | base64 | sha256sum | awk '{print $1}') == $filemdp ]
 		then
 			read -p "  nouveau mot de passe: " nouveaumdp
-			newline=$(awk -v usr=$1 '$1==usr {print}' $userfile | sed 's/'$filemdp'/'$nouveaumdp'/')
+			Nouveaumdp=$(echo "$nouveaumdp" | base64 | sha256sum | awk '{print $1}')
+			newline=$(awk -v usr=$1 '$1==usr {print}' $userfile | sed 's/'$filemdp'/'$Nouveaumdp'/')
 			sed 's/.*'$1'.*'$filemdp'.*/'"$newline"'/' $userfile >> ~/MyNetwork/file.tmp
 			mv ~/MyNetwork/file.tmp $userfile
 		else
@@ -428,7 +430,6 @@ rls(){
 
 rrm(){
 
-	# "rrm $arg") rrm a1 a2 a3
 	if [ $# -eq 3 ]
 	then
 		user_Directory=~/MyNetwork/Reseau/$1/$2
@@ -451,20 +452,6 @@ rrm(){
 
 su(){
 
-	# Usage : su username puis mot de passe
-	# verifier les droits
-	# Lorsque tout bon, 
-	# editconn add
-	# tout ce que le user fait est à son compte
-	# repertoire de travail est celui du nouveau user pas de celui qui a tapé 
-	# exit -- retour au user d'avant (if else pour gerer les fichiers tempsu et temprconnect)
-	# editconn del
-	# sécurité: chaque user doit bien garder ses identifiants
-
-	# fichier de précedence pour gerer les su (fichier temporaire)
-	# num_ligne user_sué
-	# num_ligne doit tjr contenir le nombre du dernier nom du fichier (permet la suppresion et le retour en arrière)
-	# utiliser le set pour changer le username pour celui sué
 	if [ $# -eq 2 ]
 	then
 		user_exist $1
@@ -477,7 +464,6 @@ su(){
 				user_password $1 $su_Password
 				if [ $? -eq 1 ]
 				then
-					#sutempfile=~/MyNetwork/sufile.temp_$2
 					editConn $1 $2 add
 					return 1
 				else
