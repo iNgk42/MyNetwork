@@ -55,9 +55,19 @@ then
 							else
 								if [ "$comm" == "rconnect" ]
 								then
-									echo "ici on remet le case de la section du bas"
-									echo "apres avoir verifié les param de connexion et on va travailler sur le exit"
-									echo "on doit gerer la precedence de connexion avec un fichier"
+									if [ ! -z $arg ]
+									then
+										rconnect $3 $arg
+										if [ $? -eq 1 ]
+										then
+											Crcotempfile=~/MyNetwork/rcofile.temp_$3
+											echo "$2" >> $Crcotempfile
+											set 'connect' $arg $3
+										fi
+									else
+										echo " Usage : rconnect machine-name" 
+									fi
+
 								else
 									if [ "$comm" == "write" ]
 									then
@@ -84,7 +94,7 @@ then
 			   								 "finger $arg") finger $2 $arg;;
 												passwd) passwd $3;;
 												 clear) clear;;	
-											     "su $arg") su $arg $2 
+											     "su $arg")	su $arg $2 
 													if [ $? -eq 1 ]
 													then
 														Csutempfile=~/MyNetwork/sufile.temp_$2
@@ -114,7 +124,18 @@ then
 													else
 														if [ -r $Mrcotempfile ]
 														then
-															echo "parcours+set+delete+editconn_del"
+															previous_host=$(tail -1 $Mrcotempfile)
+                                                                                                                        head -n -1 $Mrcotempfile >> ~/MyNetwork/eexxiit.tmp
+                                                                                                                        cat ~/MyNetwork/eexxiit.tmp > $Mrcotempfile
+                                                                                                                        rm ~/MyNetwork/eexxiit.tmp
+
+                                                                                                                        editConn $3 $2 del
+                                                                                                                        set "connect" $previous_host $3
+
+                                                                                                                        if [ $(wc -w < $Mrcotempfile) -eq 0 ]
+                                                                                                                        then
+                                                                                                                                rm $Mrcotempfile
+                                                                                                                        fi
 														else
 															saisie="EXITexitSORTIEsortieENDendFINfin"
 															editConn $3 $2 del
