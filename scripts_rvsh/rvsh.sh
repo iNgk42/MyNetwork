@@ -41,6 +41,8 @@ then
 					if [ $? -eq 1 ]
 					then
 						editConn $3 $2 add 
+						#originuser=$3
+						#originhost=$2
 						saisie=''
 						while [ "$saisie" != "EXITexitSORTIEsortieENDendFINfin" ]
 						do
@@ -57,12 +59,20 @@ then
 								then
 									if [ ! -z $arg ]
 									then
-										rconnect $3 $arg
-										if [ $? -eq 1 ]
-										then
-											Crcotempfile=~/MyNetwork/rcofile.temp_$3
-											echo "$2" >> $Crcotempfile
-											set 'connect' $arg $3
+										rsu_tTy=$(tty | awk -F/ '{print $4}')
+                                                                                rsutempfile=~/MyNetwork/sufile.temp_$2_$rsu_tTy
+										if [ ! -r $rsutempfile ]
+                                                                                then
+											rconnect $3 $arg
+											if [ $? -eq 1 ]
+											then
+												rco_tTy=$(tty | awk -F/ '{print $4}')
+												Crcotempfile=~/MyNetwork/rcofile.temp_$3_$rco_tTy
+												echo "$2" >> $Crcotempfile
+												set 'connect' $arg $3
+											fi
+										else
+											echo " Impossible d'utiliser rconnect en mode su"
 										fi
 									else
 										echo " Usage : rconnect machine-name" 
@@ -97,14 +107,17 @@ then
 											     "su $arg")	su $arg $2 
 													if [ $? -eq 1 ]
 													then
-														Csutempfile=~/MyNetwork/sufile.temp_$2
+														su_tTy=$(tty | awk -F/ '{print $4}')
+														Csutempfile=~/MyNetwork/sufile.temp_$2_$su_tTy
 														echo "$3" >> $Csutempfile
 														set 'connect' $2 $arg
 													fi
 													;;
 
-												  exit) Msutempfile=~/MyNetwork/sufile.temp_$2
-													Mrcotempfile=~/MyNetwork/rcofile.temp_$3
+												  exit) Msu_tTy=$(tty | awk -F/ '{print $4}')
+													Mrco_tTy=$(tty | awk -F/ '{print $4}')
+													Msutempfile=~/MyNetwork/sufile.temp_$2_$Msu_tTy
+													Mrcotempfile=~/MyNetwork/rcofile.temp_$3_$Mrco_tTy
 
 													if [ -r $Msutempfile ]
 													then
