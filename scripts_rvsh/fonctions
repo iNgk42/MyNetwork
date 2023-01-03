@@ -5,6 +5,7 @@ userfile=~/MyNetwork/Users
 userinfo=~/MyNetwork/UsersInfos
 machinelist=~/MyNetwork/hosts
 Connfile=~/MyNetwork/Conn
+messfile=~/MyNetwork/Mess
 
 
 usage(){
@@ -23,7 +24,7 @@ user_exist(){
 			while read line
 			do
 				user=$(echo $line | cut -f1 -d' ')
-				if [ $user == $1  ]
+				if [ $user == "$1"  ]
 				then
 					return 1
 				fi	
@@ -45,7 +46,7 @@ machine_exist(){
 		then
 			while read line	
 			do
-				if [ $line == $1 ]
+				if [ $(echo $line | awk '{print $1}') == "$1" ]
 				then
 					return 1
 				fi
@@ -241,10 +242,10 @@ finger(){
 		tmp_file=~/MyNetwork/check.tmp
 		touch $tmp_file
 		echo
-		echo "Login	date_de_naissance	sexe		mail	 		telephone		companie"
+		echo "Login	prenom	date_de_naissance	sexe		mail	 		telephone		companie"
 		who $1 | sed '/^$/d'| while read login autre
 		do
-			affichage=$(awk -v user=$login '$1==user {printf"%s	%s		%s	%s		%s		%s\n", $1, $2, $3, $4, $5, $6}' $userinfo)
+			affichage=$(awk -v user=$login '$1==user {printf"%s	%s	%s		%s	%s		%s		%s\n", $1, $2, $3, $4, $5, $6, $7}' $userinfo)
 			
 			if [ $(awk -v ligne="$affichage" '$0==ligne {print}' $tmp_file | wc -w) -eq 0 ]
 			then
@@ -261,11 +262,12 @@ finger(){
 			if [ $? -eq 1 ]
 			then
 				login=$(awk -v login=$2 '$1==login {print $1}' $userinfo)
-				ddn=$(awk -v login=$2 '$1==login {print $2}' $userinfo)
-				sexe=$(awk -v login=$2 '$1==login {print $3}' $userinfo)
-				mail=$(awk -v login=$2 '$1==login {print $4}' $userinfo)
-				tel=$(awk -v login=$2 '$1==login {print $5}' $userinfo)
-				companie=$(awk -v login=$2 '$1==login {print $6}' $userinfo)
+				Prenom=$(awk -v login=$2 '$1==login {print $2}' $userinfo)
+				ddn=$(awk -v login=$2 '$1==login {print $3}' $userinfo)
+				sexe=$(awk -v login=$2 '$1==login {print $4}' $userinfo)
+				mail=$(awk -v login=$2 '$1==login {print $5}' $userinfo)
+				tel=$(awk -v login=$2 '$1==login {print $6}' $userinfo)
+				companie=$(awk -v login=$2 '$1==login {print $7}' $userinfo)
 			
 				echo
 				echo " login: $login"
@@ -514,3 +516,90 @@ rconnect(){
 	fi
 }
 
+
+afinger_exist(){
+       if [ $# -eq 1 ]
+      then
+        while read line
+           do
+              inf=$(echo $line | cut -f1 -d' ')
+                 if [ $inf == $1 ]
+                     then
+                         return 1
+                 else
+                        return 0
+                  fi
+            done<$userinfo
+      else
+          echo "usage: entrer juste le nom "
+
+      fi
+
+}
+
+
+#fonction oui ou non
+answer_question(){
+         if [ $# -eq 1 ];then
+             if  [ $1 == "oui" ];then
+                  return 1
+             else
+                   return 0
+             fi
+         else
+              echo "Usage : repondre par oui ou par non "
+         fi
+    }
+
+
+admin_prompt(){
+       if [ $#  -eq 3 ];then
+           echo "[ Mode admin ] "
+            read -p "$1@$2>" $3
+        else
+           echo "usage: mode admin" 
+        fi
+}
+
+command_list_admin(){
+          echo 
+        echo -e "     ?      : liste des commandes disponibles \n\n \
+  who      : utilisateurs connectés sur la machine\n \
+  rusers   : utilisateurs connectés sur le réseau\n \
+  rhost    : machines connectées au réseau\n \
+  passwd   : changer son mot de passe\n \
+  finger   : informations sur l'utilisateur\n \
+  write    : envoyer un message à un utilisateur sur le réseau\n \
+  rvi      : créer/éditer un fichier\n \
+  rls      : afficher la liste des fichiers\n \
+  rrm      : supprimer un fichier\n \
+  rvecho   : afficher un message à l'écran\n \
+  clear    : effacer le contenu de l'écran\n \
+  exit     : se déconnecter du mode admin \n\n
+   host -a  : ajouter une machine au réseau virtuel\n \
+  host -d  : supprimer une machine du réseau virtuel\n \
+  user -a  : ajouter un utilisateur au réseau\n \
+  user -d  : supprimer un utilisateur du réseau\n \
+  user -D  : donner à un utilisateur des droits d'accès à des machines \n \
+  host -D  : donner les droits de connexion à des utilisateurs pour une machine\n \
+  afinger  : entrer les informations complémentaires sur un utilisateur\n \
+  wall [message] : envoyer un message à tous les utilisateurs connectés\n \
+  wall -n [message] : envoyer un message à tous les utilisateurs\n"
+}
+
+
+#MessCheck(){
+#	
+#	if [ $# -eq 3 ] 
+#	then
+#		if [ -r $messfile ]
+#		then
+#			while read m1 m2 m3 m4
+#			do
+#
+#			done < $messfile
+#		fi
+#	else
+#		echo "Usage : MessCheck"
+#	fi
+#}

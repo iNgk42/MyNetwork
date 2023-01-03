@@ -2,6 +2,10 @@
 
 
 . ~/MyNetwork/scripts_rvsh/fonctions
+con_fil=~/MyNetwork/Conn
+Users=~/MyNetwork/Users
+user_non_con=~/MyNetwork/result
+Mess=~/MyNetwork/Mess
 
 if [ $# -eq 3 ]
 then
@@ -46,6 +50,17 @@ then
 						saisie=''
 						while [ "$saisie" != "EXITexitSORTIEsortieENDendFINfin" ]
 						do
+							if [ -r $Mess ]
+							then
+								while read w1 w2
+								do
+									if [ $3 == $w1 ]
+									then
+										echo "$3@$2> "
+										./wall_fonction $3
+									fi
+								done < $Mess
+							fi
 							prompt $3 $2 saisie
 
 							arg=$(echo $saisie | awk '{print $2}')
@@ -185,10 +200,148 @@ else
 	then
 		if [ $1 == '-admin' ]
                 then
-                        echo "admin mode coming soon" # # # # # # # # # # # # #code Cédric
+			roothost="roothost"
+			rootuser="root"
+                        # # # # # # # # # # # # # # # # # # # #code Cédric# # # # # # # # # #
+                        
+			cpt=0
+			while  [ $cpt -lt 3 ]
+			do
+				read -p "mot de passe pour le mode admin(vous avez $((3-$cpt)) tentatives) : " password
+				if [ -z "$password" ] #empeche l'erreur nbre param de la fonction user_password
+				then
+					password="NULL"
+				fi
+				user_password $rootuser "$password"
+				if [ $? -eq 1 -a -n "$password" ]; then
+			        	cpt=4
+				else
+					echo "Mot de passe incorrect "
+					((cpt ++ ))
+				fi
+			done
+			#####si il entre le bon mot de  passe
+			if [ $cpt -eq 4 ] ;then
+		    		saisie="moi"
+				editConn $rootuser $roothost add
+		    		while [ "$saisie" != "EXITexitSORTIEsortieENDendFINfin" ]
+		    		do
+		      			admin_prompt "root" "hostroot" saisie
+		  			cob=$(echo $saisie | awk '{print $1}')
+					Arg=$(echo $saisie | awk '{print $2}')
+					Comm=$(echo $saisie | awk '{print $1}')
+		    			if [ "$cob" == "wall" ];then
+						echo  $saisie >> ~/MyNetwork/brouillon
+						read w1 w2 w3 < ~/MyNetwork/brouillon
+						rm ~/MyNetwork/brouillon
+						if [ "$w2" == "-n" ];then
+				 			#no=$w3
+				 			while read w1 w2
+				 			do
+								if [ $w1 != $rootuser ]
+								then
+									a=$(echo $w2 | cut -f4 -d' ' | cut -c4 )
+                                                                	echo -e "\n" >> /dev/pts/$a
+                                                                	echo "  INCOMING MESSAGE">> /dev/pts/$a
+                                                                	echo "  Sender: Administrateur" >> /dev/pts/$a
+                                                                	echo -e "  Time: $(date | sed 's/CET//')\n" >> /dev/pts/$a
+                                                                	echo "  CONTENU:" >> /dev/pts/$a
+                                                                	echo "  $w3" >> /dev/pts/$a
+
+				   					echo "$w1" >> ~/MyNetwork/mess
+								fi
+				 			done<$con_fil
+				 			
+				 			while read w1 w2
+				   			do
+				    				echo $w1 >> ~/MyNetwork/ken
+				  			done<$Users
+							diff --old-line-format='%L' --unchanged-line-format= --new-line-format= <(sort ~/MyNetwork/ken) <(sort ~/MyNetwork/mess) > ~/MyNetwork/result
+				 			if [ -s ~/MyNetwork/result ];then
+				      				while  read w1;do
+				         				q=$(date +"%c")
+				       					echo "$w1 $q $w3" >> ~/MyNetwork/Mess
+				  				done<$user_non_con
+				      				rm -f ~/MyNetwork/result
+				      				rm -f ~/MyNetwork/ken
+				      				rm -f ~/MyNetwork/mess
+				  			else
+			     					echo "Tous les utilisateurs sont connectés"
+			  				fi
+		  				else
+			    				echo $saisie >> ~/MyNetwork/brouillon
+			    				read w1 w2 < ~/MyNetwork/brouillon
+			    				rm ~/MyNetwork/brouillon
+			    				no=$w2
+			    				while read w1 w2
+			     	 			do
+								if [ $w1 != "root"  ]
+								then
+				    					a=$(echo $w2 | cut -f4 -d' ' | cut -c4 )
+									echo -e "\n" >> /dev/pts/$a
+                							echo "  INCOMING MESSAGE">> /dev/pts/$a
+               				 				echo "  Sender: Administrateur" >> /dev/pts/$a
+                							echo -e "  Time: $(date | sed 's/CET//')\n" >> /dev/pts/$a
+                							echo "  CONTENU:" >> /dev/pts/$a
+                							echo "  $no" >> /dev/pts/$a
+								fi
+			     	 			done<$con_fil
+                					echo -e "  \nMessage sent succesfully !"
+			     			fi
+		    			else
+		    				if [ "$Comm" == "rvecho" ]
+		    				then
+		    					rvecho "$saisie"
+		    				else
+		    					if [ "$Comm" == "write" ]
+		    					then
+								write_file_tmp=~/MyNetwork/write.tmp
+								echo $saisie >> $write_file_tmp
+								read wcomm wdest wmess < $write_file_tmp
+                						rm $write_file_tmp
+										
+								write $rootuser $roothost $wdest "$wmess"
+		    					else
+				    				if [ ! -z "$saisie" ]
+				    				then
+						  			case $saisie in
+										"?") command_list_admin;;
+							 		      rhost) rhost $roothost;;
+							 			who)  who $roothost ;;
+		   							     rusers) rusers;;
+									     finger) finger $roothost;;
+									     passwd) passwd $rootuser;;
+									 "rvi $Arg") rvi $roothost $rootuser $Arg;;
+								       	        rls) rls $roothost $rootuser;;
+									 "rrm $Arg") rrm $roothost $rootuser $Arg;;
+					   			      "finger $Arg") finger $roothost $Arg;;
+							 		  "host -a") ./addhost;;
+							 		  "host -d") ./delhost;;
+							 	       	  "user -D") ./ajout_droit;;
+							 		  "user -a") ./adduser.sh;;
+							 		  "user -d") ./deluser;;
+							 		  "host -D") ./ajout_droit_machine  ;;
+							 		    afinger) ./afinger      ;;
+							 		      clear) clear;;
+							 		       exit) saisie="EXITexitSORTIEsortieENDendFINfin"
+										     editConn $rootuser $roothost del;;
+							    			  *) echo -e "\n $Comm : Unknown command or bad arguments"
+						  				     echo -e " type '?' to see available commands\n";;
+
+						      			esac
+				      				fi
+				      			fi
+				      		fi
+		       			fi
+				done
+			else
+		     		echo "Trop de tentatives"
+
+                        fi
+                        # # # # # # # # # # # # # # # # # # # #code Cédric# # # # # # # # # #
                 else
 			usage
-                fi
+        	fi
 	else
 		usage
 	fi

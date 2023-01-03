@@ -1,0 +1,35 @@
+#!/bin/bash
+. ~/MyNetwork/scripts_rvsh/fonctions
+echo "Vous voulez procéder à l'ajout d'utilisateur à une machine"
+read -p "Entrez le nom  de  la machine : " machine
+   machine_exist "$machine"
+ if [  $? -eq  1 ];then
+         p=0
+    while [ $p = 0 ] ; do
+    read -p "Entrez le nom de l'utilisateur associé à cette machine: " user
+       user_exist "$user"
+     if [ $? = 1 ];then
+        user_rights $user $machine
+           if [ $? -eq 0 ];then
+     echo $user>>~/MyNetwork/Reseau/$machine/users
+     mkdir  ~/MyNetwork/Reseau/$machine/$user/
+     read -p  "Voulez vous ajouter un autre user ?:(oui ou non) " rep
+         answer_question $rep
+             if [ $? = 1 ];then
+                  p=0
+             else
+                  p=1
+              fi
+          else
+             echo "$user  possède déja les droits d'accès à la machine $machine"
+          fi
+     else
+        echo "l'utilisateur n'existe pas encore, veuillez le créer"
+     fi
+ done
+        echo "ajout d'utilisateur à la machine effectué"
+      else
+        echo  "La machine n'existe  pas encore"
+  fi
+
+

@@ -1,0 +1,36 @@
+#!/bin/bash
+. ~/MyNetwork/scripts_rvsh/fonctions
+echo "Vous voulez  ajouter les droits à un utilisateur"
+read -p "Entrez le nom de l'utilisateur: " nom
+user_exist "$nom"
+
+    if [ $? = 1 ];then
+      p=0
+    while [ $p -eq  0 ];
+do
+     read -p  "Entrez le nom de la machine à laquelle $nom devra avoir accès: " mach
+    machine_exist "$mach"
+        if [ $? = 1 ];then
+            user_rights $nom $mach
+               if [ $? -eq 0 ]; then
+      echo "$nom">> ~/MyNetwork/Reseau/$mach/users
+      mkdir -p ~/MyNetwork/Reseau/$mach/$nom/
+     read -p "Voulez vous  ajouter $nom à une autre machine?(oui ou non) " rep
+    answer_question $rep
+             if [ $? = 1 ];then
+                    p=0
+             else
+                    p=1
+             fi
+                 else
+                   echo "l'utilisateur  $nom a déja les droits d'accès à $mach"
+                 fi
+          else
+             echo "La machine $mach  n'existe pas"
+           fi
+done
+     echo "Droits ajoutés avec succès"
+
+     else
+           echo "l'utilisateur $nom  n'existe pas donc vueillez d'abord le créer"
+     fi

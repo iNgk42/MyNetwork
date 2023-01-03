@@ -1,0 +1,21 @@
+#!/bin/bash
+. ~/MyNetwork/scripts_rvsh/fonctions 
+echo "Vous voulez entrer les informations sur un  utilisateur, veuillez saisir son login"
+read -p "Entrez son login : " nom  
+user_exist $nom
+if [ $? -eq  1 ];then
+    afinger_exist $nom
+         if [ $? -eq 0 ];then 
+       read -p "Entrez son  prenom :  " prenom
+       read -p "Quelle est sa date de naissance(jj/mm/aa) : " date 
+       read -p "Quelle est sa  son sexe (M pour masculin et F pour féminin):  "   sexe 
+       read -p "Numéro de téléphone :  "   tel 
+       read -p "Companie ou entreprise :  "  companie
+       echo "$nom $prenom $date $sexe $prenom.$nom@gmail.com $tel $companie">>~/MyNetwork/UsersInfos
+       echo "Les informations sur $nom ont été enregistrées"
+         else
+             echo "les informations sur $nom ont déja été entrées"
+         fi
+else
+  echo "l'utilisateur $nom  n'existe pas encore  "
+fi

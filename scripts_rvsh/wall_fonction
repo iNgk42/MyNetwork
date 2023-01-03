@@ -1,0 +1,26 @@
+#!/bin/bash
+Conn=~/MyNetwork/Conn
+Mess=~/MyNetwork/Mess
+while read  w1 w2
+do
+        if [ "$1"="$w1" ];then
+  		z=$(echo $w2 | cut -f4 -d' ' | cut -c4)
+        fi
+done< $Conn
+
+while read w1 w2 w3 w4 w5 w6 w7
+do
+	if [ "$1" != "$w1" ];then
+        	echo " cool">> ~/MyNetwork/brésil
+        	rm ~/MyNetwork/brésil
+	else
+		echo -e "\n" >> /dev/pts/$z
+                echo "  INCOMING MESSAGE">> /dev/pts/$z
+                echo "  Sender: Administrateur" >> /dev/pts/$z
+                echo -e "  Time: $w2 $w3 $w4 $w5 $w6\n" >> /dev/pts/$z
+                echo "  CONTENU:" >> /dev/pts/$z
+                echo "  $w7" >> /dev/pts/$z
+	fi
+done < $Mess
+sed -i '/^'$1'/d' $Mess
+sed -i '/^root/d' $Mess

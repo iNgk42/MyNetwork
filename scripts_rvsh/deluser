@@ -1,0 +1,24 @@
+#!/bin/bash
+. ~/MyNetwork/scripts_rvsh/fonctions
+echo  "Vous voulez supprimer un utilisateur"
+read -p "Entrez le nom de l'utilisateur: " usero 
+ user_exist $usero
+
+if [ $? -eq 1 ];then
+ sed -i '/^'$usero'/d' ~/MyNetwork/Users
+ sed -i '/^'$usero'/d' ~/MyNetwork/UsersInfos
+ for i in $(ls ~/MyNetwork/Reseau)
+   do
+         while read line
+       do
+         if [ $usero == $line ];then
+           rm -r ~/MyNetwork/Reseau/$i/$usero
+           sed -i '/^'$usero'$/d' ~/MyNetwork/Reseau/$i/users
+         fi
+       done <~/MyNetwork/Reseau/$i/users
+   done
+      echo "L'utilisateur  $usero supprimé du réseau avec succès"
+else
+       echo " $usero n'existe pas dans le reseau virtuel"
+fi
+

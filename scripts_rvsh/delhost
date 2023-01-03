@@ -1,0 +1,14 @@
+#!/bin/bash
+. ~/MyNetwork/scripts_rvsh/fonctions
+
+echo "Vous voulez  supprimer une machine "
+read -p "Entrez le nom de la machine: " mach
+   machine_exist $mach
+        if [ $? = 1 ]; then
+             rm -r ~/MyNetwork/Reseau/$mach
+             sed -i  '/^'$mach'/d' ~/MyNetwork/hosts
+             echo "Machine supprimée avec succès"
+     else
+
+           echo "la machine $mach n'existe pas "
+     fi

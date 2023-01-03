@@ -1,0 +1,19 @@
+#!/bin/bash
+. ~/MyNetwork/scripts_rvsh/fonctions
+echo "Vous voulez procéder à la création d'une machine"
+read -p "Entrez le nom  de  la machine : " machine
+   machine_exist $machine
+if [  $? -eq  0 ]
+   then
+        b=$(date +"%A %d %B")
+        c=$(date +%T)
+        echo $machine "créée le " $b "à" $c>>~/MyNetwork/hosts
+        mkdir -p ~/MyNetwork/Reseau/$machine
+        touch   ~/MyNetwork/Reseau/$machine/users
+        echo "La machine $machine a été créée avec succès"
+ else
+        echo  "La machine existe déja"
+  fi
+
+
+
