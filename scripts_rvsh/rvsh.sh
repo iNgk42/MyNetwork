@@ -57,7 +57,7 @@ then
 									if [ $3 == $w1 ]
 									then
 										echo "$3@$2> "
-										./wall_fonction $3
+										. ~/MyNetwork/scripts_rvsh/wall_fonction $3
 									fi
 								done < $Mess
 							fi
@@ -226,7 +226,9 @@ else
 				editConn $rootuser $roothost add
 		    		while [ "$saisie" != "EXITexitSORTIEsortieENDendFINfin" ]
 		    		do
-		      			admin_prompt "root" "hostroot" saisie
+					Prootuser=$rootuser
+					Proothost=$roothost
+		      			admin_prompt $Prootuser $Proothost saisie
 		  			cob=$(echo $saisie | awk '{print $1}')
 					Arg=$(echo $saisie | awk '{print $2}')
 					Comm=$(echo $saisie | awk '{print $1}')
@@ -302,34 +304,113 @@ else
 										
 								write $rootuser $roothost $wdest "$wmess"
 		    					else
-				    				if [ ! -z "$saisie" ]
-				    				then
-						  			case $saisie in
-										"?") command_list_admin;;
-							 		      rhost) rhost $roothost;;
-							 			who)  who $roothost ;;
-		   							     rusers) rusers;;
-									     finger) finger $roothost;;
-									     passwd) passwd $rootuser;;
-									 "rvi $Arg") rvi $roothost $rootuser $Arg;;
-								       	        rls) rls $roothost $rootuser;;
-									 "rrm $Arg") rrm $roothost $rootuser $Arg;;
-					   			      "finger $Arg") finger $roothost $Arg;;
-							 		  "host -a") ./addhost;;
-							 		  "host -d") ./delhost;;
-							 	       	  "user -D") ./ajout_droit;;
-							 		  "user -a") ./adduser.sh;;
-							 		  "user -d") ./deluser;;
-							 		  "host -D") ./ajout_droit_machine  ;;
-							 		    afinger) ./afinger      ;;
-							 		      clear) clear;;
-							 		       exit) saisie="EXITexitSORTIEsortieENDendFINfin"
-										     editConn $rootuser $roothost del;;
-							    			  *) echo -e "\n $Comm : Unknown command or bad arguments"
-						  				     echo -e " type '?' to see available commands\n";;
+		    						if [ "$Comm" == "rconnect" ]
+		    						then
+		    							if [ ! -z $Arg ]
+									then
+										Arsu_tTy=$(tty | awk -F/ '{print $4}')
+                                                                                Arsutempfile=~/MyNetwork/sufile.temp_$roothost_$Arsu_tTy
+										if [ ! -r $Arsutempfile ]
+                                                                                then
+											rconnect $rootuser $Arg
+											if [ $? -eq 1 ]
+											then
+												Arco_tTy=$(tty | awk -F/ '{print $4}')
+												ACrcotempfile=~/MyNetwork/rcofile.temp_$rootuser_$Arco_tTy
+												echo "$roothost" >> $ACrcotempfile
+												#set 'connect' $arg $3
+												roothost=$Arg
+											fi
+										else
+											echo " Impossible d'utiliser rconnect en mode su"
+										fi
+									else
+										echo " Usage : rconnect machine-name" 
+									fi
+		    						else
+					    				if [ ! -z "$saisie" ]
+					    				then
+							  			case $saisie in
+											"?") command_list_admin;;
+								 		      rhost) rhost $roothost;;
+								 			who) who $roothost ;;
+			   							     rusers) rusers;;
+										     finger) finger $roothost;;
+										     passwd) passwd $rootuser;;
+										  "su $Arg") su $Arg $roothost
+										  	     if [ $? -eq 1 ]
+											     then
+											     	Asu_tTy=$(tty | awk -F/ '{print $4}')
+												ACsutempfile=~/MyNetwork/sufile.temp_$roothost_$Asu_tTy
+												echo "$rootuser" >> $ACsutempfile
+												#set 'connect' $roothost $Arg
+												rootuser=$Arg
+											     fi
+											     ;; 
+										 "rvi $Arg") rvi $roothost $rootuser $Arg;;
+									       	        rls) rls $roothost $rootuser;;
+										 "rrm $Arg") rrm $roothost $rootuser $Arg;;
+						   			      "finger $Arg") finger $roothost $Arg;;
+								 		  "host -a") . ~/MyNetwork/scripts_rvsh/addhost;;
+								 		  "host -d") . ~/MyNetwork/scripts_rvsh/delhost;;
+								 	       	  "user -D") . ~/MyNetwork/scripts_rvsh/ajout_droit;;
+								 		  "user -a") . ~/MyNetwork/scripts_rvsh/adduser.sh;;
+								 		  "user -d") . ~/MyNetwork/scripts_rvsh/deluser;;
+								 		  "host -D") . ~/MyNetwork/scripts_rvsh/ajout_droit_machine  ;;
+								 		    afinger) . ~/MyNetwork/scripts_rvsh/afinger;;
+								 		      clear) clear;;
+								 		       exit) #saisie="EXITexitSORTIEsortieENDendFINfin"
+											     #editConn $rootuser $roothost del;;
+											     
+											     AMsu_tTy=$(tty | awk -F/ '{print $4}')
+														AMrco_tTy=$(tty | awk -F/ '{print $4}')
+														AMsutempfile=~/MyNetwork/sufile.temp_$roothost_$AMsu_tTy
+														AMrcotempfile=~/MyNetwork/rcofile.temp_$rootuser_$AMrco_tTy
 
-						      			esac
-				      				fi
+														if [ -r $AMsutempfile ]
+														then
+																Aprevious_user=$(tail -1 $AMsutempfile)
+																head -n -1 $AMsutempfile >> ~/MyNetwork/eeexiit.tmp
+																cat ~/MyNetwork/eeexiit.tmp > $AMsutempfile
+																rm ~/MyNetwork/eeexiit.tmp
+
+																editConn $rootuser $roothost del
+																#set "connect" $2 $previous_user
+																rootuser=$Aprevious_user
+
+																if [ $(wc -w < $AMsutempfile) -eq 0 ]
+																then
+																	rm $AMsutempfile
+																fi
+
+														else
+															if [ -r $AMrcotempfile ]
+															then
+																Aprevious_host=$(tail -1 $AMrcotempfile)
+		                                                                                                                head -n -1 $AMrcotempfile >> ~/MyNetwork/eeexxiit.tmp
+		                                                                                                                cat ~/MyNetwork/eeexxiit.tmp > $AMrcotempfile
+		                                                                                                                rm ~/MyNetwork/eeexxiit.tmp
+
+		                                                                                                                editConn $rootuser $roothost del
+		                                                                                                                #set "connect" $previous_host $3
+																roothost=$Aprevious_host
+
+		                                                                                                                if [ $(wc -w < $AMrcotempfile) -eq 0 ]
+		                                                                                                                then
+		                                                                                                                        rm $AMrcotempfile
+		                                                                                                                fi
+															else
+																saisie="EXITexitSORTIEsortieENDendFINfin"
+																editConn $rootuser $roothost del
+															fi
+														fi;;
+											     
+								    			  *) echo -e "\n $Comm : Unknown command or bad arguments"
+							  				     echo -e " type '?' to see available commands\n";;
+
+							      			esac
+					      				fi
+					      			fi
 				      			fi
 				      		fi
 		       			fi

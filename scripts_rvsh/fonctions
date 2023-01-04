@@ -242,10 +242,10 @@ finger(){
 		tmp_file=~/MyNetwork/check.tmp
 		touch $tmp_file
 		echo
-		echo "Login	prenom	date_de_naissance	sexe		mail	 		telephone		companie"
+		echo "Login	prenom	date_de_naissance	sexe	mail	 		telephone	companie"
 		who $1 | sed '/^$/d'| while read login autre
 		do
-			affichage=$(awk -v user=$login '$1==user {printf"%s	%s	%s		%s	%s		%s		%s\n", $1, $2, $3, $4, $5, $6, $7}' $userinfo)
+			affichage=$(awk -v user=$login '$1==user {printf"%s	%s	%s		%s	%s	%s	%s\n", $1, $2, $3, $4, $5, $6, $7}' $userinfo)
 			
 			if [ $(awk -v ligne="$affichage" '$0==ligne {print}' $tmp_file | wc -w) -eq 0 ]
 			then
@@ -271,6 +271,7 @@ finger(){
 			
 				echo
 				echo " login: $login"
+				echo " prenom: $Prenom"
 				echo " date de naiss.: $ddn"
 				echo " sexe: $sexe"
 				echo " e-mail: $mail"
@@ -555,7 +556,7 @@ answer_question(){
 admin_prompt(){
        if [ $#  -eq 3 ];then
            echo "[ Mode admin ] "
-            read -p "$1@$2>" $3
+            read -p "$1@$2> " $3
         else
            echo "usage: mode admin" 
         fi

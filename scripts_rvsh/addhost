@@ -9,7 +9,7 @@ if [  $? -eq  0 ]
         c=$(date +%T)
         echo $machine "créée le " $b "à" $c>>~/MyNetwork/hosts
         mkdir -p ~/MyNetwork/Reseau/$machine
-        touch   ~/MyNetwork/Reseau/$machine/users
+        echo "root" >> ~/MyNetwork/Reseau/$machine/users
         echo "La machine $machine a été créée avec succès"
  else
         echo  "La machine existe déja"
