@@ -1,4 +1,4 @@
-# PROJET LO14 UTT 2022-2023
+# PROJET RVSH
 
 Il s'agit de simuler un réseau virtuel de machines Linux.
 
